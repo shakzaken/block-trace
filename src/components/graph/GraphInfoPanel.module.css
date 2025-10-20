@@ -123,7 +123,7 @@
 
 .statsGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 12px;
 }
 
@@ -197,9 +197,77 @@
 }
 
 .exploredCount {
-  font-size: 14px;
-  font-weight: 700;
-  color: #d97706;
+  font-size: 12px;
+  color: #92400e;
+}
+
+/* Connected Addresses (Neighbors) */
+.neighborsCard {
+  margin-top: 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.neighborsHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.neighborsLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #047857;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.neighborsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.neighborItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #d1fae5;
+}
+
+.neighborIndex {
+  background: #047857;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 3px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.neighborAddress {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  color: #047857;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.neighborsMore {
+  text-align: center;
+  font-size: 11px;
+  color: #059669;
+  font-style: italic;
+  padding: 4px;
 }
 
 /* Activity Log */

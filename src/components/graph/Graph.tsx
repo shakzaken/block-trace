@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
-import { BlockchainService,GraphData } from "@/services/BlockchainService";
+import { BlockchainService } from "@/services/BlockchainService";
+import { GraphData } from "@/services/blockchainModel";
 import { Button } from "../Button";
 import { useGraph } from "@/context/GraphContext";
 import GraphInfoPanel from "./GraphInfoPanel";
@@ -14,13 +15,14 @@ const ForceGraph2D = dynamic(
 );
 
 export default function BlockchainGraph() {
-  const { state } = useGraph();
+  const { state, dispatch } = useGraph();
   const { address: startAddress, graphData: contextGraphData, loading: contextLoading, error: contextError } = state;
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [expanded, setExpanded] = useState(new Set<string>());
+  const [activeAddress, setActiveAddress] = useState<string | null>(null);
 
   // Load initial graph when context data changes
   useEffect(() => {
@@ -28,6 +30,7 @@ export default function BlockchainGraph() {
       setGraphData(contextGraphData);
       if (startAddress) {
         setExpanded(new Set([startAddress]));
+        setActiveAddress(startAddress); // Set initial active address
       }
     }
   }, [contextGraphData, startAddress]);
@@ -36,6 +39,7 @@ export default function BlockchainGraph() {
   useEffect(() => {
     if (startAddress && !expanded.has(startAddress)) {
       loadAddress(startAddress);
+      setActiveAddress(startAddress); // Set as active when first loaded
     }
   }, [startAddress]);
 
@@ -85,6 +89,45 @@ export default function BlockchainGraph() {
     return { nodes: mergedNodes, links: mergedLinks };
   }
 
+  // Helper: get data about a specific node
+  function getNodeData(address: string) {
+    // Find connected links (both incoming and outgoing)
+    const connectedLinks = graphData.links.filter(
+      (link) => link.source === address || link.target === address
+    );
+    
+    // Get neighbors (connected addresses)
+    const neighbors = new Set<string>();
+    connectedLinks.forEach((link) => {
+      if (link.source === address) neighbors.add(link.target as string);
+      if (link.target === address) neighbors.add(link.source as string);
+    });
+    
+    // Separate incoming and outgoing links
+    const incomingLinks = connectedLinks.filter((link) => link.target === address);
+    const outgoingLinks = connectedLinks.filter((link) => link.source === address);
+    
+    return {
+      totalEdges: connectedLinks.length,
+      neighbors: Array.from(neighbors),
+      incomingCount: incomingLinks.length,
+      outgoingCount: outgoingLinks.length,
+      connectedLinks
+    };
+  }
+
+  // Handle node click - set as active address and load more data if needed
+  function handleNodeClick(node: any) {
+    const nodeId = node.id;
+    setActiveAddress(nodeId);
+    setLogs((prev) => [...prev, `🎯 Selected address: ${nodeId}`]);
+    
+    // Load more data for this node if not already expanded
+    if (!expanded.has(nodeId)) {
+      loadAddress(nodeId);
+    }
+  }
+
   if (!startAddress) {
     return (
       <div className="flex items-center justify-center h-96 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl">
@@ -127,7 +170,7 @@ export default function BlockchainGraph() {
           linkWidth={(link: any) => Math.max(1, link.value * 2)}
           linkColor={(link: any) => link.color || "#666"}
           backgroundColor="#ffffff"
-          onNodeClick={(node: any) => loadAddress(node.id)} // expand node on click
+          onNodeClick={handleNodeClick} // Use new click handler
           onLinkClick={(link: any) => {
             setLogs((prev) => [
               ...prev,
@@ -140,10 +183,11 @@ export default function BlockchainGraph() {
       {/* ---- Enhanced Info Panel ---- */}
       <div className="flex-1 min-w-0">
         <GraphInfoPanel
-          startAddress={startAddress}
+          startAddress={activeAddress || startAddress}
           graphData={graphData}
           logs={logs}
           expanded={expanded}
+          nodeData={activeAddress ? getNodeData(activeAddress) : undefined}
           onClearLogs={() => setLogs([])}
         />
       </div>

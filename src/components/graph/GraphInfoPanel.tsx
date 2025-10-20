@@ -10,6 +10,13 @@ interface GraphInfoPanelProps {
   };
   logs: string[];
   expanded: Set<string>;
+  nodeData?: {
+    totalEdges: number;
+    neighbors: string[];
+    incomingCount: number;
+    outgoingCount: number;
+    connectedLinks: any[];
+  };
   onClearLogs: () => void;
 }
 
@@ -18,6 +25,7 @@ export default function GraphInfoPanel({
   graphData, 
   logs, 
   expanded, 
+  nodeData,
   onClearLogs 
 }: GraphInfoPanelProps) {
   return (
@@ -60,15 +68,63 @@ export default function GraphInfoPanel({
               
               {/* Stats Grid */}
               <div className={styles.statsGrid}>
-                <div className={`${styles.statCard} ${styles.statCardNodes}`}>
-                  <div className={`${styles.statNumber} ${styles.statNumberNodes}`}>{graphData.nodes.length}</div>
-                  <div className={`${styles.statLabel} ${styles.statLabelNodes}`}>Address Nodes</div>
-                </div>
-                <div className={`${styles.statCard} ${styles.statCardLinks}`}>
-                  <div className={`${styles.statNumber} ${styles.statNumberLinks}`}>{graphData.links.length}</div>
-                  <div className={`${styles.statLabel} ${styles.statLabelLinks}`}>Transaction Edges</div>
-                </div>
+                {nodeData ? (
+                  // Show node-specific stats when a node is selected
+                  <>
+                    <div className={`${styles.statCard} ${styles.statCardNodes}`}>
+                      <div className={`${styles.statNumber} ${styles.statNumberNodes}`}>{nodeData.totalEdges}</div>
+                      <div className={`${styles.statLabel} ${styles.statLabelNodes}`}>Connected Edges</div>
+                    </div>
+                    <div className={`${styles.statCard} ${styles.statCardLinks}`}>
+                      <div className={`${styles.statNumber} ${styles.statNumberLinks}`}>{nodeData.neighbors.length}</div>
+                      <div className={`${styles.statLabel} ${styles.statLabelLinks}`}>Connected Addresses</div>
+                    </div>
+                    <div className={`${styles.statCard} ${styles.statCardNodes}`}>
+                      <div className={`${styles.statNumber} ${styles.statNumberNodes}`}>{nodeData.incomingCount}</div>
+                      <div className={`${styles.statLabel} ${styles.statLabelNodes}`}>Incoming Txns</div>
+                    </div>
+                    <div className={`${styles.statCard} ${styles.statCardLinks}`}>
+                      <div className={`${styles.statNumber} ${styles.statNumberLinks}`}>{nodeData.outgoingCount}</div>
+                      <div className={`${styles.statLabel} ${styles.statLabelLinks}`}>Outgoing Txns</div>
+                    </div>
+                  </>
+                ) : (
+                  // Show general graph stats when no specific node is selected
+                  <>
+                    <div className={`${styles.statCard} ${styles.statCardNodes}`}>
+                      <div className={`${styles.statNumber} ${styles.statNumberNodes}`}>{graphData.nodes.length}</div>
+                      <div className={`${styles.statLabel} ${styles.statLabelNodes}`}>Address Nodes</div>
+                    </div>
+                    <div className={`${styles.statCard} ${styles.statCardLinks}`}>
+                      <div className={`${styles.statNumber} ${styles.statNumberLinks}`}>{graphData.links.length}</div>
+                      <div className={`${styles.statLabel} ${styles.statLabelLinks}`}>Transaction Edges</div>
+                    </div>
+                  </>
+                )}
               </div>
+              
+              {/* Connected Addresses (Neighbors) */}
+              {nodeData && nodeData.neighbors.length > 0 && (
+                <div className={styles.neighborsCard}>
+                  <div className={styles.neighborsHeader}>
+                    <span>🔗</span>
+                    <span className={styles.neighborsLabel}>Connected Addresses</span>
+                  </div>
+                  <div className={styles.neighborsList}>
+                    {nodeData.neighbors.slice(0, 5).map((neighbor, index) => (
+                      <div key={neighbor} className={styles.neighborItem}>
+                        <span className={styles.neighborIndex}>{index + 1}</span>
+                        <span className={styles.neighborAddress}>{neighbor}</span>
+                      </div>
+                    ))}
+                    {nodeData.neighbors.length > 5 && (
+                      <div className={styles.neighborsMore}>
+                        +{nodeData.neighbors.length - 5} more addresses
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               
               {/* Expanded Addresses */}
               {expanded.size > 1 && (
