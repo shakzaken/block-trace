@@ -1,0 +1,387 @@
+/* GraphInfoPanel.module.css */
+
+.container {
+  width: 100%;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid #d1d5db;
+  border-radius: 16px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.header {
+  background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
+  color: white;
+  padding: 16px;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerIcon {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.headerTitle {
+  font-weight: 700;
+  font-size: 18px;
+  margin: 0;
+}
+
+.clearButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clearButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Address Card */
+.addressCard {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.addressHeader {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 8px 16px;
+}
+
+.addressHeaderContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.addressHeaderText {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+}
+
+.addressBody {
+  padding: 16px;
+}
+
+.addressDisplay {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.addressLabel {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.addressText {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  color: #1f2937;
+  word-break: break-all;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.statCard {
+  text-align: center;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.statCardNodes {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+}
+
+.statCardLinks {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
+}
+
+.statNumber {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.statNumberNodes {
+  color: #2563eb;
+}
+
+.statNumberLinks {
+  color: #7c3aed;
+}
+
+.statLabel {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statLabelNodes {
+  color: #1d4ed8;
+}
+
+.statLabelLinks {
+  color: #6d28d9;
+}
+
+.exploredCard {
+  margin-top: 12px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.exploredHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.exploredLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.exploredCount {
+  font-size: 14px;
+  font-weight: 700;
+  color: #d97706;
+}
+
+/* Activity Log */
+.logCard {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.logHeader {
+  background: linear-gradient(90deg, #475569 0%, #374151 100%);
+  color: white;
+  padding: 8px 16px;
+}
+
+.logHeaderContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logHeaderText {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+}
+
+.logBadge {
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  margin-left: auto;
+}
+
+.logBody {
+  padding: 12px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 32px 16px;
+  color: #9ca3af;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.emptyTitle {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.emptySubtext {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.logList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 200px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-right: 8px;
+  /* Force scrollbar to always be visible */
+  scrollbar-width: auto;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+.logList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.logList::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.logList::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.logList::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.logEntry {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid;
+  transition: all 0.2s ease;
+}
+
+.logEntrySuccess {
+  background: #dcfce7;
+  border-left-color: #4ade80;
+  color: #166534;
+}
+
+.logEntryError {
+  background: #fef2f2;
+  border-left-color: #f87171;
+  color: #991b1b;
+}
+
+.logEntryFetching {
+  background: #dbeafe;
+  border-left-color: #60a5fa;
+  color: #1e40af;
+}
+
+.logEntryDefault {
+  background: #f9fafb;
+  border-left-color: #9ca3af;
+  color: #374151;
+}
+
+.logEntryContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.logEntryNumber {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+  min-width: fit-content;
+}
+
+.logEntryText {
+  flex: 1;
+  line-height: 1.5;
+}
+
+/* Instructions */
+.instructionsCard {
+  background: linear-gradient(135deg, #f1f5f9 0%, #dbeafe 100%);
+  border-radius: 12px;
+  border: 1px solid #c7d2fe;
+  padding: 16px;
+}
+
+.instructionsHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.instructionsHeaderText {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #4338ca;
+}
+
+.instructionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: #4f46e5;
+}
+
+.instructionItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.instructionBullet {
+  color: #a5b4fc;
+  margin-top: 2px;
+}
+
+/* Responsive */
