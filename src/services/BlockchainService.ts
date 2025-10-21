@@ -2,7 +2,7 @@
 import axios from "axios";
 
 /** ---------- Types ---------- **/
-import {BlockchainTx,TxInput,TxOutput,AddressData,GraphData} from "./blockchainModel"
+import {BlockchainTx,TxInput,TxOutput,AddressData,GraphData} from "./BlockchainModel"
 import { blockCypherService } from "./BlockCypherService";
 
 /** ---------- Service ---------- **/
@@ -12,13 +12,13 @@ const PAGE_LIMIT = 10;
 
 export class BlockchainService {
   // Rate limiting: track last API call time
-  private static lastApiCall: number = 0;
-  private static readonly API_DELAY = 12000; // 12 seconds in milliseconds
+  private  lastApiCall: number = 0;
+  private  readonly API_DELAY = 12000; // 12 seconds in milliseconds
 
   /**
    * Enforces 12-second delay between API calls
    */
-  private static async enforceRateLimit(): Promise<void> {
+  private async enforceRateLimit(): Promise<void> {
     const now = Date.now();
     const timeSinceLastCall = now - this.lastApiCall;
     
@@ -34,7 +34,7 @@ export class BlockchainService {
   /**
    * Fetches an address and its transactions from Blockchain.com API
    */
-  static async fetchAddressData(address: string, offset = 0): Promise<AddressData> {
+   async fetchAddressData(address: string, offset = 0): Promise<AddressData> {
     // Enforce rate limiting before making API call
     await this.enforceRateLimit();
     
@@ -52,7 +52,7 @@ export class BlockchainService {
   /**
    * Converts transactions into graphData for react-force-graph
    */
-  static buildGraphData(address: string, txs: BlockchainTx[]): GraphData {
+   buildGraphData(address: string, txs: BlockchainTx[]): GraphData {
     const links: GraphData["links"] = [];
     const nodeSet = new Set<string>([address]);
 
@@ -117,7 +117,7 @@ export class BlockchainService {
   /**
    * Full flow: fetch + build graph data
    */
-  static async fetchGraph(address: string, offset = 0): Promise<GraphData> {
+  async fetchGraph(address: string, offset = 0): Promise<GraphData> {
     // const data = await this.fetchAddressData(address, offset);
     // return this.buildGraphData(address, data.txs);
     
@@ -127,7 +127,7 @@ export class BlockchainService {
   /**
    * Development helper: returns fake graph data to avoid API rate limits
    */
-  static async fetchFakeGraph(address: string, offset = 0): Promise<GraphData> {
+  async fetchFakeGraph(address: string, offset = 0): Promise<GraphData> {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
     
@@ -200,7 +200,7 @@ export class BlockchainService {
   /**
    * Helper: Generate a fake Bitcoin address
    */
-  private static generateFakeAddress(): string {
+  private generateFakeAddress(): string {
     const prefixes = ['1', '3', 'bc1'];
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)]!;
     const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
@@ -217,7 +217,7 @@ export class BlockchainService {
   /**
    * Helper: Generate a fake transaction hash
    */
-  private static generateFakeTxHash(): string {
+  private  generateFakeTxHash(): string {
     const chars = '0123456789abcdef';
     let hash = '';
     for (let i = 0; i < 64; i++) {

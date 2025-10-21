@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import styles from './WalletAddress.module.css';
-import { BlockchainService } from '@/services/BlockchainService';
+import { blockCypherService } from '@/services/BlockCypherService';
 import { useGraph, useGraphActions } from '@/context/GraphContext';
 
 export default function WalletAddress() {
@@ -51,7 +51,7 @@ export default function WalletAddress() {
       setAddress(inputValue);
       
       // Fetch the graph data
-      const graph = await BlockchainService.fetchFakeGraph(inputValue, OFFSET);
+      const graph = await blockCypherService.fetchGraph(inputValue, OFFSET);
       console.log(graph);
       
       // Set the graph data in the global context

@@ -2,21 +2,21 @@ import axios from "axios";
 
 /** ---------- Types ---------- **/
 
-import {BlockchainTx,TxInput,TxOutput,AddressData,GraphData} from "./blockchainModel"
+import {BlockchainTx,TxInput,TxOutput,AddressData,GraphData} from "./BlockchainModel"
 
 /** ---------- Constants ---------- **/
 
 const API_BASE = "https://api.blockcypher.com/v1/btc/main/addrs";
-const PAGE_LIMIT = 10;
+const PAGE_LIMIT = 5;
 
 /** ---------- Service ---------- **/
 
 export class BlockCypherService {
-    private static lastApiCall: number = 0;
-    private static readonly API_DELAY = 12000; // 12 seconds in milliseconds
+    private  lastApiCall: number = 0;
+    private  readonly API_DELAY = 12000; // 12 seconds in milliseconds
 
 
-    private static async enforceRateLimit(): Promise<void> {
+    private  async enforceRateLimit(): Promise<void> {
     const now = Date.now();
     const timeSinceLastCall = now - this.lastApiCall;
     
@@ -33,40 +33,48 @@ export class BlockCypherService {
    * Fetches an address and its transactions from BlockCypher
    */
   async fetchAddressData(address: string, offset = 0): Promise<AddressData> {
-    
-    const url = `${API_BASE}/${address}?limit=${PAGE_LIMIT}&includeHex=false`;
+
+    // BlockCypher uses 'before' parameter for pagination with block height, not offset
+    // For now, let's use a simpler approach and fetch more transactions initially
+    const effectiveLimit = PAGE_LIMIT + offset;
+    const url = `${API_BASE}/${address}/full?limit=${effectiveLimit}`;
 
     try {
         // Enforce rate limiting before making API call
-        await BlockCypherService.enforceRateLimit();
+        await this.enforceRateLimit();
 
       const { data } = await axios.get(url, { timeout: 15000 });
 
-      // Normalize BlockCypher's structure → unified AddressData format
-      const txs: BlockchainTx[] = (data.txrefs || []).map((tx: any) => ({
-        hash: tx.tx_hash,
-        inputs: [
-          {
-            prev_out: {
-              addr: tx.tx_input_n === -1 ? undefined : address,
-              value: tx.value,
-            },
+      // Convert BlockCypher's full transaction data to our format
+      // Slice the results to simulate pagination (skip 'offset' transactions, take PAGE_LIMIT)
+      const allTxs = data.txs || [];
+      const paginatedTxs = offset > 0 ? allTxs.slice(offset, offset + PAGE_LIMIT) : allTxs.slice(0, PAGE_LIMIT);
+      
+      const txs: BlockchainTx[] = paginatedTxs.map((tx: any) => ({
+        hash: tx.hash,
+        inputs: tx.inputs.map((input: any) => ({
+          prev_out: {
+            addr: input.addresses?.[0],
+            value: input.output_value,
           },
-        ],
-        out: [
-          {
-            addr: tx.tx_output_n >= 0 ? address : undefined,
-            value: tx.value,
-          },
-        ],
-        result: tx.tx_input_n === -1 ? tx.value : -tx.value,
+        })),
+        out: tx.outputs.map((output: any) => ({
+          addr: output.addresses?.[0],
+          value: output.value,
+        })),
+        result: tx.outputs
+          .filter((o: any) => o.addresses?.includes(address))
+          .reduce((sum: number, o: any) => sum + o.value, 0) -
+          tx.inputs
+          .filter((i: any) => i.addresses?.includes(address))
+          .reduce((sum: number, i: any) => sum + i.output_value, 0),
         time: new Date(tx.confirmed).getTime() / 1000,
       }));
 
       return {
         address: data.address,
         n_tx: data.n_tx ?? txs.length,
-        total_received: data.total_received ?? data.balance,
+        total_received: data.total_received ?? 0,
         total_sent: data.total_sent ?? 0,
         final_balance: data.balance,
         txs,
@@ -141,7 +149,7 @@ export class BlockCypherService {
   /**
    * Full flow: fetch address → build graph
    */
-  async fetchGraph(address: string, offset = 0): Promise<GraphData> {
+async fetchGraph(address: string, offset = 0): Promise<GraphData> {
     const data = await this.fetchAddressData(address, offset);
     return this.buildGraphData(address, data.txs);
   }

@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
-import { BlockchainService } from "@/services/BlockchainService";
-import { GraphData } from "@/services/blockchainModel";
+import { useState, useEffect, useMemo } from "react";
+import { blockCypherService } from "@/services/BlockCypherService";
+import { GraphData } from "@/services/BlockchainModel";
 import { Button } from "../Button";
 import { useGraph } from "@/context/GraphContext";
 import GraphInfoPanel from "./GraphInfoPanel";
@@ -23,6 +23,9 @@ export default function BlockchainGraph() {
   const [logs, setLogs] = useState<string[]>([]);
   const [expanded, setExpanded] = useState(new Set<string>());
   const [activeAddress, setActiveAddress] = useState<string | null>(null);
+  const [addressOffsets, setAddressOffsets] = useState<Map<string, number>>(new Map());
+  const [addressMetadata, setAddressMetadata] = useState<Map<string, any>>(new Map());
+  const [nodeDataUpdateCounter, setNodeDataUpdateCounter] = useState(0);
 
   // Load initial graph when context data changes
   useEffect(() => {
@@ -43,26 +46,55 @@ export default function BlockchainGraph() {
     }
   }, [startAddress]);
 
-  async function loadAddress(address: string) {
-    if (expanded.has(address)) return; // already loaded
+  async function loadAddress(address: string, offset: number = 0) {
+    // For first load, check if already expanded. For pagination, always load
+    if (offset === 0 && expanded.has(address)) return;
 
     setLoading(true);
     setError(null);
-    setLogs((prev) => [...prev, `Fetching ${address} ...`]);
+    
+    const isFirstLoad = offset === 0;
+    const currentOffset = isFirstLoad ? 0 : offset;
+    
+    setLogs((prev) => [...prev, `Fetching ${address} (offset: ${currentOffset})...`]);
 
     try {
-      const data = await BlockchainService.fetchGraph(address);
-      setLogs((prev) => [...prev, `✅ Loaded ${data.nodes.length} nodes, ${data.links.length} links for ${address}`]);
+      // First fetch the address data to get metadata
+      const addressData = await blockCypherService.fetchAddressData(address, currentOffset);
+      const data = await blockCypherService.fetchGraph(address, currentOffset);
+      
+      setLogs((prev) => [...prev, `✅ Loaded ${data.nodes.length} nodes, ${data.links.length} links for ${address} (offset: ${currentOffset})`]);
+
+      // Store address metadata
+      setAddressMetadata(prev => {
+        const newMetadata = new Map(prev);
+        newMetadata.set(address, {
+          balance: addressData.final_balance,
+          totalReceived: addressData.total_received,
+          totalSent: addressData.total_sent,
+          transactionCount: addressData.n_tx
+        });
+        return newMetadata;
+      });
 
       // Merge with existing graph data
       setGraphData((prev) => mergeGraphData(prev, data));
 
-      // Mark as expanded
-      setExpanded((prev) => new Set([...prev, address]));
+      // Update offset tracking
+      setAddressOffsets(prev => {
+        const newOffsets = new Map(prev);
+        newOffsets.set(address, currentOffset + 10); // Next offset will be current + 10
+        return newOffsets;
+      });
+
+      // Mark as expanded on first load
+      if (isFirstLoad) {
+        setExpanded((prev) => new Set([...prev, address]));
+      }
     } catch (err) {
       console.error(err);
       setError(`Failed to fetch data for ${address}`);
-      setLogs((prev) => [...prev, `❌ Error fetching ${address}`]);
+      setLogs((prev) => [...prev, `❌ Error fetching ${address} (offset: ${currentOffset})`]);
     } finally {
       setLoading(false);
     }
@@ -89,23 +121,51 @@ export default function BlockchainGraph() {
     return { nodes: mergedNodes, links: mergedLinks };
   }
 
-  // Helper: get data about a specific node
-  function getNodeData(address: string) {
+  // Memoized calculation for node data - recalculates when activeAddress or graphData changes
+  const currentNodeData = useMemo(() => {
+    if (!activeAddress) return undefined;
+    
+    console.log('Calculating node data for:', activeAddress);
+    console.log('Total links in graph:', graphData.links.length);
+    console.log('Sample link structure:', graphData.links[0]);
+    
     // Find connected links (both incoming and outgoing)
-    const connectedLinks = graphData.links.filter(
-      (link) => link.source === address || link.target === address
-    );
+    // Handle both string IDs and object references
+    const connectedLinks = graphData.links.filter((link) => {
+      const sourceId = typeof link.source === 'object' ? (link.source as any).id : link.source;
+      const targetId = typeof link.target === 'object' ? (link.target as any).id : link.target;
+      
+      return sourceId === activeAddress || targetId === activeAddress;
+    });
+    
+    console.log('Connected links found:', connectedLinks.length);
     
     // Get neighbors (connected addresses)
     const neighbors = new Set<string>();
     connectedLinks.forEach((link) => {
-      if (link.source === address) neighbors.add(link.target as string);
-      if (link.target === address) neighbors.add(link.source as string);
+      const sourceId = typeof link.source === 'object' ? (link.source as any).id : link.source;
+      const targetId = typeof link.target === 'object' ? (link.target as any).id : link.target;
+      
+      if (sourceId === activeAddress) neighbors.add(targetId);
+      if (targetId === activeAddress) neighbors.add(sourceId);
     });
     
     // Separate incoming and outgoing links
-    const incomingLinks = connectedLinks.filter((link) => link.target === address);
-    const outgoingLinks = connectedLinks.filter((link) => link.source === address);
+    const incomingLinks = connectedLinks.filter((link) => {
+      const targetId = typeof link.target === 'object' ? (link.target as any).id : link.target;
+      return targetId === activeAddress;
+    });
+    const outgoingLinks = connectedLinks.filter((link) => {
+      const sourceId = typeof link.source === 'object' ? (link.source as any).id : link.source;
+      return sourceId === activeAddress;
+    });
+    
+    console.log('Node data calculated for', activeAddress, 'counter:', nodeDataUpdateCounter, {
+      totalEdges: connectedLinks.length,
+      neighbors: neighbors.size,
+      incomingCount: incomingLinks.length,
+      outgoingCount: outgoingLinks.length
+    });
     
     return {
       totalEdges: connectedLinks.length,
@@ -114,18 +174,36 @@ export default function BlockchainGraph() {
       outgoingCount: outgoingLinks.length,
       connectedLinks
     };
-  }
+  }, [activeAddress, graphData.links, nodeDataUpdateCounter]);
 
   // Handle node click - set as active address and load more data if needed
   function handleNodeClick(node: any) {
     const nodeId = node.id;
-    setActiveAddress(nodeId);
+    console.log('Node clicked:', nodeId); // Debug logging
+    
+    // Force update the active address
+    setActiveAddress((prev) => {
+      console.log('Active address changing from', prev, 'to', nodeId);
+      return nodeId;
+    });
+    
+    // Force node data recalculation
+    setNodeDataUpdateCounter(prev => prev + 1);
+    
     setLogs((prev) => [...prev, `🎯 Selected address: ${nodeId}`]);
     
     // Load more data for this node if not already expanded
     if (!expanded.has(nodeId)) {
       loadAddress(nodeId);
     }
+  }
+
+  // Load more transactions for the active address
+  function loadMoreTransactions() {
+    if (!activeAddress) return;
+    
+    const currentOffset = addressOffsets.get(activeAddress) || 10;
+    loadAddress(activeAddress, currentOffset);
   }
 
   if (!startAddress) {
@@ -187,8 +265,11 @@ export default function BlockchainGraph() {
           graphData={graphData}
           logs={logs}
           expanded={expanded}
-          nodeData={activeAddress ? getNodeData(activeAddress) : undefined}
+          nodeData={currentNodeData}
+          addressMetadata={activeAddress ? addressMetadata.get(activeAddress) : undefined}
           onClearLogs={() => setLogs([])}
+          onLoadMore={activeAddress ? loadMoreTransactions : undefined}
+          isLoading={loading}
         />
       </div>
     </div>

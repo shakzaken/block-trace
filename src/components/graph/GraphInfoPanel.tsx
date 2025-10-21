@@ -17,7 +17,15 @@ interface GraphInfoPanelProps {
     outgoingCount: number;
     connectedLinks: any[];
   };
+  addressMetadata?: {
+    balance: number;
+    totalReceived: number;
+    totalSent: number;
+    transactionCount: number;
+  };
   onClearLogs: () => void;
+  onLoadMore?: () => void;
+  isLoading?: boolean;
 }
 
 export default function GraphInfoPanel({ 
@@ -26,7 +34,10 @@ export default function GraphInfoPanel({
   logs, 
   expanded, 
   nodeData,
-  onClearLogs 
+  addressMetadata,
+  onClearLogs,
+  onLoadMore,
+  isLoading = false
 }: GraphInfoPanelProps) {
   return (
     <div className={styles.container}>
@@ -65,6 +76,36 @@ export default function GraphInfoPanel({
                 <p className={styles.addressLabel}>Address</p>
                 <p className={styles.addressText}>{startAddress}</p>
               </div>
+              
+              {/* Address Metadata */}
+              {addressMetadata && (
+                <div className={styles.metadataGrid}>
+                  <div className={styles.metadataItem}>
+                    <span className={styles.metadataLabel}>Balance</span>
+                    <span className={styles.metadataValue}>
+                      {(addressMetadata.balance / 1e8).toFixed(2)} BTC
+                    </span>
+                  </div>
+                  <div className={styles.metadataItem}>
+                    <span className={styles.metadataLabel}>Total Received</span>
+                    <span className={styles.metadataValue}>
+                      {(addressMetadata.totalReceived / 1e8).toFixed(2)} BTC
+                    </span>
+                  </div>
+                  <div className={styles.metadataItem}>
+                    <span className={styles.metadataLabel}>Total Sent</span>
+                    <span className={styles.metadataValue}>
+                      {(addressMetadata.totalSent / 1e8).toFixed(2)} BTC
+                    </span>
+                  </div>
+                  <div className={styles.metadataItem}>
+                    <span className={styles.metadataLabel}>Transactions</span>
+                    <span className={styles.metadataValue}>
+                      {addressMetadata.transactionCount.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
               
               {/* Stats Grid */}
               <div className={styles.statsGrid}>
@@ -123,6 +164,31 @@ export default function GraphInfoPanel({
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+              
+              {/* Load More Button */}
+              {onLoadMore && startAddress && (
+                <div className={styles.loadMoreSection}>
+                  <button 
+                    className={styles.loadMoreButton}
+                    onClick={onLoadMore}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className={styles.loadingSpinner}></div>
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        📥 Load More Transactions
+                      </>
+                    )}
+                  </button>
+                  <p className={styles.loadMoreDescription}>
+                    Fetch the next 10 transactions for {startAddress.slice(0, 8)}...
+                  </p>
                 </div>
               )}
               
